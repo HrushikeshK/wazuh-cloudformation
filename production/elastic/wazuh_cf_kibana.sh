@@ -12,6 +12,8 @@ kibana_port=$(cat /tmp/wazuh_cf_settings | grep '^KibanaPort:' | cut -d' ' -f2)
 eth0_ip=$(/sbin/ifconfig eth0 | grep 'inet' | head -1 | sed -e 's/^[[:space:]]*//' | cut -d' ' -f2)
 wazuh_master_ip=$(cat /tmp/wazuh_cf_settings | grep '^WazuhMasterIP:' | cut -d' ' -f2)
 wazuh_api_port=$(cat /tmp/wazuh_cf_settings | grep '^WazuhApiPort:' | cut -d' ' -f2)
+wazuh_api_username=$(cat /tmp/wazuh_cf_settings | grep '^WazuhApiAdminUsername:' | cut -d' ' -f2 )
+wazuh_api_password=$(cat /tmp/wazuh_cf_settings | grep '^WazuhApiAdminPassword:' | cut -d' ' -f2 )
 InstallType=$(cat /tmp/wazuh_cf_settings | grep '^InstallType:' | cut -d' ' -f2)
 wazuh_major=`echo $wazuh_version | cut -d'.' -f1`
 wazuh_minor=`echo $wazuh_version | cut -d'.' -f2`
@@ -201,15 +203,17 @@ kibana_certs(){
   cp kibana/kibana.crt /etc/kibana/certs
   cp kibana/kibana.key /etc/kibana/certs
   chown -R kibana: /etc/kibana/certs
+  chown -R kibana:kibana /usr/share/kibana/optimize 2> /tmp/error.log
+  echo 'chown for optimize dir successfull' >> /tmp/deploy.log
   chmod -R 770 /etc/kibana/certs
   echo "# Elasticsearch from/to Kibana" >> /etc/kibana/kibana.yml
   echo "elasticsearch.ssl.certificateAuthorities: ["/etc/kibana/certs/ca/ca.crt"]" >> /etc/kibana/kibana.yml
   echo "elasticsearch.ssl.certificate: "/etc/kibana/certs/kibana.crt"" >> /etc/kibana/kibana.yml
   echo "elasticsearch.ssl.key: "/etc/kibana/certs/kibana.key"" >> /etc/kibana/kibana.yml
   echo "# Browser from/to Kibana" >> /etc/kibana/kibana.yml
-  echo "server.ssl.enabled: true" >> /etc/kibana/kibana.yml
-  echo "server.ssl.certificate: "/etc/kibana/certs/kibana.crt"" >> /etc/kibana/kibana.yml
-  echo "server.ssl.key: "/etc/kibana/certs/kibana.key"" >> /etc/kibana/kibana.yml
+  echo "server.ssl.enabled: false" >> /etc/kibana/kibana.yml
+  echo "# server.ssl.certificate: "/etc/kibana/certs/kibana.crt"" >> /etc/kibana/kibana.yml
+  echo "# server.ssl.key: "/etc/kibana/certs/kibana.key"" >> /etc/kibana/kibana.yml
 }
 
 configure_kibana(){
@@ -267,6 +271,7 @@ install_plugin(){
   mkdir /usr/share/kibana/data
   chown -R kibana:kibana /usr/share/kibana/data
   chown -R kibana:kibana /usr/share/kibana/plugins/
+  chown -R kibana:kibana /usr/share/kibana/optimize/
   if [[ ${InstallType} != 'sources' ]] || [[ ${BRANCH} == "" ]]
   then
     cd /usr/share/kibana
@@ -279,8 +284,8 @@ install_plugin(){
 
 add_api(){
 echo "Adding Wazuh API" >> /tmp/deploy.log
-sed -ie '/- default:/,+4d' /usr/share/kibana/data/wazuh/config/wazuh.yml
-cat > /usr/share/kibana/data/wazuh/config/wazuh.yml << EOF
+sed -ie '/- default:/,+4d' /usr/share/kibana/optimize/wazuh/config/wazuh.yml
+cat > /usr/share/kibana/optimize/wazuh/config/wazuh.yml << EOF
 hosts:
   - default:
       url: https://${wazuh_master_ip}
@@ -363,7 +368,7 @@ server {
     access_log            /var/log/nginx/nginx.access.log;
     error_log            /var/log/nginx/nginx.error.log;
     location / {
-        proxy_pass https://$eth0_ip:5601/;
+        proxy_pass http://$eth0_ip:5601/;
     }
 }
 EOF
