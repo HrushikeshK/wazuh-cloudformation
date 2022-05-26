@@ -203,8 +203,6 @@ kibana_certs(){
   cp kibana/kibana.crt /etc/kibana/certs
   cp kibana/kibana.key /etc/kibana/certs
   chown -R kibana: /etc/kibana/certs
-  chown -R kibana:kibana /usr/share/kibana/optimize 2> /tmp/error.log
-  echo 'chown for optimize dir successfull' >> /tmp/deploy.log
   chmod -R 770 /etc/kibana/certs
   echo "# Elasticsearch from/to Kibana" >> /etc/kibana/kibana.yml
   echo "elasticsearch.ssl.certificateAuthorities: ["/etc/kibana/certs/ca/ca.crt"]" >> /etc/kibana/kibana.yml
@@ -227,6 +225,8 @@ elasticsearch.username: "elastic"
 elasticsearch.password: "$ssh_password"
 EOF
 echo "Kibana.yml configured." >> /tmp/deploy.log
+chown -R kibana:kibana /usr/share/kibana/optimize 2> /tmp/error.log
+echo 'chown for optimize dir successfull' >> /tmp/deploy.log
 
 # Allow Kibana to listen on privileged ports
 setcap 'CAP_NET_BIND_SERVICE=+eip' /usr/share/kibana/node/bin/node
@@ -271,7 +271,8 @@ install_plugin(){
   mkdir /usr/share/kibana/data
   chown -R kibana:kibana /usr/share/kibana/data
   chown -R kibana:kibana /usr/share/kibana/plugins/
-  chown -R kibana:kibana /usr/share/kibana/optimize/
+  chown -R kibana:kibana /usr/share/kibana/optimize 2> /tmp/error.log
+  echo 'chown for optimize dir successfull' >> /tmp/deploy.log  
   if [[ ${InstallType} != 'sources' ]] || [[ ${BRANCH} == "" ]]
   then
     cd /usr/share/kibana
