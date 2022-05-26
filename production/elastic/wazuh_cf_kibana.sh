@@ -288,7 +288,7 @@ hosts:
       url: https://${wazuh_master_ip}
       port: ${wazuh_api_port}
       username: wazuh
-      password: ${ssh_password}
+      password: wazuh
 EOF
 echo "Configured API" >> /tmp/deploy.log
 }
