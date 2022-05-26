@@ -225,8 +225,6 @@ elasticsearch.username: "elastic"
 elasticsearch.password: "$ssh_password"
 EOF
 echo "Kibana.yml configured." >> /tmp/deploy.log
-chown -R kibana:kibana /usr/share/kibana/optimize 2> /tmp/error.log
-echo 'chown for optimize dir successfull' >> /tmp/deploy.log
 
 # Allow Kibana to listen on privileged ports
 setcap 'CAP_NET_BIND_SERVICE=+eip' /usr/share/kibana/node/bin/node
@@ -271,8 +269,6 @@ install_plugin(){
   mkdir /usr/share/kibana/data
   chown -R kibana:kibana /usr/share/kibana/data
   chown -R kibana:kibana /usr/share/kibana/plugins/
-  chown -R kibana:kibana /usr/share/kibana/optimize 2> /tmp/error.log
-  echo 'chown for optimize dir successfull' >> /tmp/deploy.log  
   if [[ ${InstallType} != 'sources' ]] || [[ ${BRANCH} == "" ]]
   then
     cd /usr/share/kibana
@@ -285,8 +281,8 @@ install_plugin(){
 
 add_api(){
 echo "Adding Wazuh API" >> /tmp/deploy.log
-sed -ie '/- default:/,+4d' /usr/share/kibana/optimize/wazuh/config/wazuh.yml
-cat > /usr/share/kibana/optimize/wazuh/config/wazuh.yml << EOF
+sed -ie '/- default:/,+4d' /usr/share/kibana/data/wazuh/config/wazuh.yml
+cat > /usr/share/kibana/data/wazuh/config/wazuh.yml << EOF
 hosts:
   - default:
       url: https://${wazuh_master_ip}
