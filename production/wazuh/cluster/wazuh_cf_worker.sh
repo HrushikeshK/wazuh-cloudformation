@@ -32,7 +32,7 @@ echo "Created SSH user." >> /tmp/log
 
 if [[ ${InstallType} == 'packages' ]]
 then
-cat > /etc/yum.repos.d/wazuh.repo <<\EOF
+cat > /etc/yum.repos.d/wazuh.repo << EOF
 [wazuh_repo]
 gpgcheck=1
 gpgkey=https://packages.wazuh.com/key/GPG-KEY-WAZUH
